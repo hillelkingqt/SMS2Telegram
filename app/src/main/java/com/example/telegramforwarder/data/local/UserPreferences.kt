@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -21,6 +22,12 @@ class UserPreferences(private val context: Context) {
         val THEME_MODE = stringPreferencesKey("theme_mode") // "system", "light", "dark"
         val IS_SMS_ENABLED = booleanPreferencesKey("is_sms_enabled")
         val IS_EMAIL_ENABLED = booleanPreferencesKey("is_email_enabled")
+
+        // New features
+        val IS_MISSED_CALL_ENABLED = booleanPreferencesKey("is_missed_call_enabled")
+        val IS_BATTERY_NOTIFY_ENABLED = booleanPreferencesKey("is_battery_notify_enabled")
+        val BATTERY_LOW_THRESHOLD = floatPreferencesKey("battery_low_threshold")
+        val BATTERY_HIGH_THRESHOLD = floatPreferencesKey("battery_high_threshold")
     }
 
     val botToken: Flow<String?> = context.dataStore.data.map { preferences ->
@@ -45,6 +52,22 @@ class UserPreferences(private val context: Context) {
 
     val isEmailEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[IS_EMAIL_ENABLED] ?: true
+    }
+
+    val isMissedCallEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_MISSED_CALL_ENABLED] ?: false // Default false or true? User requested to be able to disable it, implied enabled by default maybe? sticking to false for safety or true? Let's go with false until configured.
+    }
+
+    val isBatteryNotifyEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_BATTERY_NOTIFY_ENABLED] ?: false
+    }
+
+    val batteryLowThreshold: Flow<Float> = context.dataStore.data.map { preferences ->
+        preferences[BATTERY_LOW_THRESHOLD] ?: 20f
+    }
+
+    val batteryHighThreshold: Flow<Float> = context.dataStore.data.map { preferences ->
+        preferences[BATTERY_HIGH_THRESHOLD] ?: 90f
     }
 
     suspend fun saveBotToken(token: String) {
@@ -80,6 +103,30 @@ class UserPreferences(private val context: Context) {
     suspend fun setEmailEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[IS_EMAIL_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setMissedCallEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_MISSED_CALL_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setBatteryNotifyEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_BATTERY_NOTIFY_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setBatteryLowThreshold(value: Float) {
+        context.dataStore.edit { preferences ->
+            preferences[BATTERY_LOW_THRESHOLD] = value
+        }
+    }
+
+    suspend fun setBatteryHighThreshold(value: Float) {
+        context.dataStore.edit { preferences ->
+            preferences[BATTERY_HIGH_THRESHOLD] = value
         }
     }
 }

@@ -6,6 +6,7 @@ import android.content.Intent
 import android.provider.Telephony
 import com.example.telegramforwarder.data.LogRepository
 import com.example.telegramforwarder.data.local.AppDatabase
+import com.example.telegramforwarder.data.local.ContactHelper
 import com.example.telegramforwarder.data.local.MessageEntity
 import com.example.telegramforwarder.data.local.UserPreferences
 import com.example.telegramforwarder.data.remote.GeminiRepository
@@ -115,7 +116,11 @@ class SmsReceiver : BroadcastReceiver() {
             }
 
             // Construct HTML message
-            val safeSender = escapeHtml(sender)
+            val contactHelper = ContactHelper(context)
+            val contactName = contactHelper.getContactNameByNumber(sender)
+            val displaySender = if (contactName != null) "$contactName ($sender)" else sender
+
+            val safeSender = escapeHtml(displaySender)
             val safeContent = escapeHtml(content)
 
             sb.append("📩 <b>New $type</b>\n\n")

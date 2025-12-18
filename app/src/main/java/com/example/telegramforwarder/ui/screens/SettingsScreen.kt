@@ -1,5 +1,6 @@
 package com.example.telegramforwarder.ui.screens
 
+import android.content.Intent
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -30,7 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.telegramforwarder.data.local.UserPreferences
 import com.example.telegramforwarder.data.remote.TelegramRepository
+import com.example.telegramforwarder.services.BotService
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +52,12 @@ fun SettingsScreen(
     val isSmsEnabled by preferences.isSmsEnabled.collectAsState(initial = true)
     val isEmailEnabled by preferences.isEmailEnabled.collectAsState(initial = true)
 
+    // New Features
+    val isMissedCallEnabled by preferences.isMissedCallEnabled.collectAsState(initial = false)
+    val isBatteryNotifyEnabled by preferences.isBatteryNotifyEnabled.collectAsState(initial = false)
+    val batteryLowThreshold by preferences.batteryLowThreshold.collectAsState(initial = 20f)
+    val batteryHighThreshold by preferences.batteryHighThreshold.collectAsState(initial = 90f)
+
     var tokenInput by remember { mutableStateOf("") }
     var chatInput by remember { mutableStateOf("") }
     var newGeminiKeyInput by remember { mutableStateOf("") }
@@ -59,6 +68,9 @@ fun SettingsScreen(
         if (botToken != null) tokenInput = botToken!!
         if (chatId != null) chatInput = chatId!!
     }
+
+    // Trigger BotService when verification is confirmed (or whenever preferences change that might enable it)
+    // Actually, we should trigger it after "Save & Verify" succeeds.
 
     // Animation state
     val visibleState = remember {
@@ -128,6 +140,62 @@ fun SettingsScreen(
                                 checked = isEmailEnabled,
                                 onCheckedChange = { scope.launch { preferences.setEmailEnabled(it) } }
                             )
+                             SettingsSwitchCard(
+                                title = "Missed Call Notifications",
+                                subtitle = "Notify when a call is missed or rejected",
+                                icon = Icons.Default.PhoneMissed,
+                                checked = isMissedCallEnabled,
+                                onCheckedChange = { scope.launch { preferences.setMissedCallEnabled(it) } }
+                            )
+                        }
+                    }
+                }
+
+                // --- Battery Options ---
+                 item {
+                    AnimatedEntry(visibleState, 150) {
+                        SettingsSectionTitle("Battery Monitoring")
+                    }
+                }
+
+                item {
+                    AnimatedEntry(visibleState, 180) {
+                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            SettingsSwitchCard(
+                                title = "Battery Alerts",
+                                subtitle = "Notify on low/high battery levels",
+                                icon = Icons.Default.BatteryAlert,
+                                checked = isBatteryNotifyEnabled,
+                                onCheckedChange = { scope.launch { preferences.setBatteryNotifyEnabled(it) } }
+                            )
+
+                            if (isBatteryNotifyEnabled) {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(20.dp),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                ) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
+                                        Text("Low Battery Threshold: ${batteryLowThreshold.toInt()}%", fontWeight = FontWeight.SemiBold)
+                                        Slider(
+                                            value = batteryLowThreshold,
+                                            onValueChange = { scope.launch { preferences.setBatteryLowThreshold(it) } },
+                                            valueRange = 0f..50f,
+                                            steps = 49
+                                        )
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+
+                                        Text("High Battery Threshold: ${batteryHighThreshold.toInt()}%", fontWeight = FontWeight.SemiBold)
+                                        Slider(
+                                            value = batteryHighThreshold,
+                                            onValueChange = { scope.launch { preferences.setBatteryHighThreshold(it) } },
+                                            valueRange = 50f..100f,
+                                            steps = 49
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -250,6 +318,11 @@ fun SettingsScreen(
 
                                     if (response.success) {
                                         snackbarHostState.showSnackbar("Saved & Verified!")
+
+                                        // Start Polling Service on successful verify
+                                        val serviceIntent = Intent(context, BotService::class.java)
+                                        context.startForegroundService(serviceIntent)
+
                                     } else {
                                         snackbarHostState.showSnackbar("Failed: ${response.message}")
                                     }
