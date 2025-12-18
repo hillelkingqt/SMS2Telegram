@@ -514,6 +514,70 @@ fun SettingsScreen(
                         }
                     }
                 }
+
+                item {
+                    AnimatedEntry(visibleState, 750) {
+                        val database = remember { com.example.telegramforwarder.data.local.AppDatabase.getDatabase(context) }
+                        var showClearDialog by remember { mutableStateOf(false) }
+                        
+                        if (showClearDialog) {
+                            androidx.compose.material3.AlertDialog(
+                                onDismissRequest = { showClearDialog = false },
+                                title = { Text("Clear Messages") },
+                                text = { Text("This will delete all stored messages. This action cannot be undone.") },
+                                confirmButton = {
+                                    androidx.compose.material3.TextButton(
+                                        onClick = {
+                                            scope.launch {
+                                                database.messageDao().deleteAllMessages()
+                                                snackbarHostState.showSnackbar("All messages cleared")
+                                            }
+                                            showClearDialog = false
+                                        }
+                                    ) {
+                                        Text("Clear", color = MaterialTheme.colorScheme.error)
+                                    }
+                                },
+                                dismissButton = {
+                                    androidx.compose.material3.TextButton(onClick = { showClearDialog = false }) {
+                                        Text("Cancel")
+                                    }
+                                }
+                            )
+                        }
+                        
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showClearDialog = true },
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(20.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .background(MaterialTheme.colorScheme.error, CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.DeleteForever, contentDescription = null, tint = Color.White)
+                                }
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column {
+                                    Text("Clear Messages", fontWeight = FontWeight.Bold)
+                                    Text("Delete all stored messages", style = MaterialTheme.typography.bodySmall)
+                                }
+                                Spacer(modifier = Modifier.weight(1f))
+                                Icon(Icons.Default.ChevronRight, contentDescription = null)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
