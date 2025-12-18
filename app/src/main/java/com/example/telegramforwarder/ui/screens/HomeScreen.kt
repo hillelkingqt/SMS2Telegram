@@ -132,8 +132,8 @@ fun HomeScreen(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.background,
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                            MaterialTheme.colorScheme.surface,
+                            MaterialTheme.colorScheme.surfaceContainer
                         )
                     )
                 )
