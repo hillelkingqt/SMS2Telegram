@@ -57,8 +57,8 @@ fun SettingsScreen(
 
     // Initialize inputs with stored values
     LaunchedEffect(botToken, chatId) {
-        tokenInput = botToken
-        chatInput = chatId
+        tokenInput = botToken.orEmpty()
+        chatInput = chatId.orEmpty()
     }
 
     Scaffold(
