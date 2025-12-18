@@ -1,6 +1,6 @@
 # SMS2Telegram
 
-A beautiful, intelligent Android application that forwards SMS messages, emails, and notifications to Telegram with AI-powered verification code detection.
+An efficient Android application that forwards SMS messages, emails, and notifications to Telegram with AI-powered verification code detection.
 
 ## ✨ Features
 
@@ -14,11 +14,10 @@ A beautiful, intelligent Android application that forwards SMS messages, emails,
 - **Multiple API Keys**: Support for redundant API keys with automatic rotation
 - **Smart Parsing**: Intelligent message parsing and formatting
 
-### 🎨 Beautiful iOS-Inspired Design
-- **Material 3 Design**: Modern, clean interface with iOS-like aesthetics
+### 🎨 Material Design Interface
+- **Material 3 Design**: Modern, clean Android interface
 - **Multiple Themes**: System, Light, and Dark mode support
-- **Smooth Animations**: Fluid transitions and interactive elements
-- **Custom Typography**: iOS-inspired text styles and spacing
+- **Battery Efficient**: Optimized for minimal battery consumption
 
 ### ⚙️ Smart Features
 - **Battery Monitoring**: Get alerts when battery is low or fully charged

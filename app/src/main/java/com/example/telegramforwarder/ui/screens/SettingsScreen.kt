@@ -1,19 +1,12 @@
 package com.example.telegramforwarder.ui.screens
 
 import android.content.Intent
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -21,13 +14,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -36,7 +25,6 @@ import com.example.telegramforwarder.data.local.UserPreferences
 import com.example.telegramforwarder.data.remote.TelegramRepository
 import com.example.telegramforwarder.services.BotService
 import kotlinx.coroutines.launch
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,13 +60,7 @@ fun SettingsScreen(
         if (chatId != null) chatInput = chatId!!
     }
 
-    // Trigger BotService when verification is confirmed (or whenever preferences change that might enable it)
-    // Actually, we should trigger it after "Save & Verify" succeeds.
-
-    // Animation state
-    val visibleState = remember {
-        MutableTransitionState(false).apply { targetState = true }
-    }
+    val visibleState = remember { androidx.compose.animation.core.MutableTransitionState(true) }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -89,10 +71,7 @@ fun SettingsScreen(
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
+                }
             )
         },
         // Handle keyboard overlap
@@ -101,14 +80,7 @@ fun SettingsScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.surface,
-                            MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    )
-                )
+                .background(MaterialTheme.colorScheme.background)
                 .padding(padding)
         ) {
             LazyColumn(
@@ -120,14 +92,11 @@ fun SettingsScreen(
             ) {
                 // --- Forwarding Options ---
                 item {
-                    AnimatedEntry(visibleState, 0) {
-                        SettingsSectionTitle("Forwarding Options")
-                    }
+                    SettingsSectionTitle("Forwarding Options")
                 }
 
                 item {
-                    AnimatedEntry(visibleState, 100) {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             SettingsSwitchCard(
                                 title = "Forward SMS",
                                 subtitle = "Intercept and forward incoming SMS",
@@ -167,7 +136,7 @@ fun SettingsScreen(
                             if (isBatteryNotifyEnabled) {
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(20.dp),
+                                    shape = RoundedCornerShape(12.dp),
                                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                                 ) {
                                     Column(modifier = Modifier.padding(16.dp)) {
@@ -205,7 +174,7 @@ fun SettingsScreen(
                 item {
                     AnimatedEntry(visibleState, 250) {
                         Card(
-                            shape = RoundedCornerShape(20.dp),
+                            shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
@@ -334,11 +303,8 @@ fun SettingsScreen(
                             enabled = !isTestingConnection,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            )
+                                .height(48.dp),
+                            shape = RoundedCornerShape(8.dp)
                         ) {
                             if (isTestingConnection) {
                                 CircularProgressIndicator(
@@ -366,7 +332,7 @@ fun SettingsScreen(
                         
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(20.dp),
+                            shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surface
                             ),
@@ -424,7 +390,7 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { onNavigateToLogs() },
-                            shape = RoundedCornerShape(20.dp),
+                            shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
                             )
@@ -488,7 +454,7 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { showClearDialog = true },
-                            shape = RoundedCornerShape(20.dp),
+                            shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
                             )
@@ -527,14 +493,7 @@ fun AnimatedEntry(
     delay: Int,
     content: @Composable () -> Unit
 ) {
-    AnimatedVisibility(
-        visibleState = visibleState,
-        enter = slideInVertically(
-            initialOffsetY = { 50 },
-            animationSpec = tween(500, delayMillis = delay, easing = FastOutSlowInEasing)
-        ) + fadeIn(animationSpec = tween(500, delayMillis = delay)),
-        content = { content() }
-    )
+    content()
 }
 
 @Composable
@@ -557,35 +516,18 @@ fun SettingsSwitchCard(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    // Interaction animation
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "cardScale"
-    )
-    
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(scale),
-        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null
-                ) { onCheckedChange(!checked) }
+                .clickable { onCheckedChange(!checked) }
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -627,12 +569,7 @@ fun BeautifulTextField(
         onValueChange = onValueChange,
         label = { Text(label) },
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-            containerColor = Color.Transparent
-        ),
+        shape = RoundedCornerShape(8.dp),
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
     )
