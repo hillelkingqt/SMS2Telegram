@@ -415,7 +415,7 @@ fun BeautifulTextField(
         colors = TextFieldDefaults.outlinedTextFieldColors(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
             unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color.Transparent
         ),
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
