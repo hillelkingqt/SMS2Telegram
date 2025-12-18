@@ -106,23 +106,6 @@ Send these commands to your bot in Telegram:
 - SMS permissions for message forwarding
 - Notification access for email forwarding
 
-## 📝 Version History
-
-### Version 2.0 (Latest)
-- 🎨 Complete UI overhaul with iOS-inspired design
-- 🌙 Added theme switcher (System/Light/Dark)
-- ✨ Enhanced animations and transitions
-- 🎨 Improved color scheme and typography
-- 🔧 Better error handling and reliability
-- 📊 Updated to latest dependencies
-- 🐛 Various bug fixes and performance improvements
-
-### Version 1.3
-- Added battery monitoring
-- Added missed call notifications
-- Improved message handling
-- Bug fixes
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
