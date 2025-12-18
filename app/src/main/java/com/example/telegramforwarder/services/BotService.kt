@@ -8,6 +8,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.Manifest
 import android.os.BatteryManager
 import android.os.Build
 import android.os.IBinder
@@ -15,6 +17,7 @@ import android.telephony.PhoneStateListener
 import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.example.telegramforwarder.R
 import com.example.telegramforwarder.data.local.ContactHelper
 import com.example.telegramforwarder.data.local.UserPreferences
@@ -311,7 +314,7 @@ class BotService : Service() {
         } else if (data == "cmd_search_contact") {
             conversationStates[userId] = BotState.SEARCHING_CONTACT
             sendMessage(userId, "Enter name to search:")
-        } else if (data.startsWith("contact_")) {
+        } else if (data.startsWith("c:")) {
             // Selected a contact
             // Format: contact_ID|Name|Number (Need to be careful about length, maybe just store ID map?)
             // Telegram callback data limit is 64 bytes. This is tight.
@@ -416,6 +419,10 @@ class BotService : Service() {
     }
 
     private fun sendSms(phoneNumber: String, message: String) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+            sendMessage(chatId?.toLong() ?: return, "❌ SMS permission not granted. Please open the app and allow SMS permissions.")
+            return
+        }
         try {
             val smsManager = android.telephony.SmsManager.getDefault()
             smsManager.sendTextMessage(phoneNumber, null, message, null, null)
