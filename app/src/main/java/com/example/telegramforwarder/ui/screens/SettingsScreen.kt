@@ -3,8 +3,11 @@ package com.example.telegramforwarder.ui.screens
 import android.content.Intent
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -349,6 +352,127 @@ fun SettingsScreen(
                     }
                 }
 
+                // --- Appearance ---
+                item {
+                    AnimatedEntry(visibleState, 550) {
+                        SettingsSectionTitle("Appearance")
+                    }
+                }
+
+                item {
+                    AnimatedEntry(visibleState, 580) {
+                        val themeMode by preferences.themeMode.collectAsState(initial = "system")
+                        
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    "Theme",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    ThemeOption(
+                                        title = "System",
+                                        icon = Icons.Default.PhoneAndroid,
+                                        isSelected = themeMode == "system",
+                                        onClick = { scope.launch { preferences.saveThemeMode("system") } },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    ThemeOption(
+                                        title = "Light",
+                                        icon = Icons.Default.LightMode,
+                                        isSelected = themeMode == "light",
+                                        onClick = { scope.launch { preferences.saveThemeMode("light") } },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    ThemeOption(
+                                        title = "Dark",
+                                        icon = Icons.Default.DarkMode,
+                                        isSelected = themeMode == "dark",
+                                        onClick = { scope.launch { preferences.saveThemeMode("dark") } },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // --- Statistics ---
+                item {
+                    AnimatedEntry(visibleState, 575) {
+                        SettingsSectionTitle("Statistics")
+                    }
+                }
+
+                item {
+                    AnimatedEntry(visibleState, 590) {
+                        val database = remember { com.example.telegramforwarder.data.local.AppDatabase.getDatabase(context) }
+                        val totalMessages by database.messageDao().getMessageCount().collectAsState(initial = 0)
+                        val smsCount by database.messageDao().getMessageCountByType("SMS").collectAsState(initial = 0)
+                        val emailCount by database.messageDao().getMessageCountByType("EMAIL").collectAsState(initial = 0)
+                        
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                Text(
+                                    "Message Statistics",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    StatisticCard(
+                                        label = "Total",
+                                        value = totalMessages.toString(),
+                                        icon = Icons.Default.Message,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    StatisticCard(
+                                        label = "SMS",
+                                        value = smsCount.toString(),
+                                        icon = Icons.Default.Sms,
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    StatisticCard(
+                                        label = "Email",
+                                        value = emailCount.toString(),
+                                        icon = Icons.Default.Email,
+                                        color = MaterialTheme.colorScheme.tertiary,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // --- Diagnostics ---
                 item {
                     AnimatedEntry(visibleState, 600) {
@@ -383,6 +507,70 @@ fun SettingsScreen(
                                 Column {
                                     Text("System Logs", fontWeight = FontWeight.Bold)
                                     Text("View debugging logs", style = MaterialTheme.typography.bodySmall)
+                                }
+                                Spacer(modifier = Modifier.weight(1f))
+                                Icon(Icons.Default.ChevronRight, contentDescription = null)
+                            }
+                        }
+                    }
+                }
+
+                item {
+                    AnimatedEntry(visibleState, 750) {
+                        val database = remember { com.example.telegramforwarder.data.local.AppDatabase.getDatabase(context) }
+                        var showClearDialog by remember { mutableStateOf(false) }
+                        
+                        if (showClearDialog) {
+                            androidx.compose.material3.AlertDialog(
+                                onDismissRequest = { showClearDialog = false },
+                                title = { Text("Clear Messages") },
+                                text = { Text("This will delete all stored messages. This action cannot be undone.") },
+                                confirmButton = {
+                                    androidx.compose.material3.TextButton(
+                                        onClick = {
+                                            scope.launch {
+                                                database.messageDao().deleteAllMessages()
+                                                snackbarHostState.showSnackbar("All messages cleared")
+                                            }
+                                            showClearDialog = false
+                                        }
+                                    ) {
+                                        Text("Clear", color = MaterialTheme.colorScheme.error)
+                                    }
+                                },
+                                dismissButton = {
+                                    androidx.compose.material3.TextButton(onClick = { showClearDialog = false }) {
+                                        Text("Cancel")
+                                    }
+                                }
+                            )
+                        }
+                        
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showClearDialog = true },
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(20.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .background(MaterialTheme.colorScheme.error, CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.DeleteForever, contentDescription = null, tint = Color.White)
+                                }
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column {
+                                    Text("Clear Messages", fontWeight = FontWeight.Bold)
+                                    Text("Delete all stored messages", style = MaterialTheme.typography.bodySmall)
                                 }
                                 Spacer(modifier = Modifier.weight(1f))
                                 Icon(Icons.Default.ChevronRight, contentDescription = null)
@@ -431,8 +619,22 @@ fun SettingsSwitchCard(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
+    // Interaction animation
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "cardScale"
+    )
+    
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .scale(scale),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -442,6 +644,10 @@ fun SettingsSwitchCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) { onCheckedChange(!checked) }
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -524,6 +730,109 @@ fun GeminiKeyItem(index: Int, key: String, onDelete: () -> Unit) {
         )
         IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
             Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+        }
+    }
+}
+
+@Composable
+fun ThemeOption(
+    title: String,
+    icon: ImageVector,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) 
+                MaterialTheme.colorScheme.primaryContainer 
+            else 
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        border = if (isSelected) 
+            androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) 
+        else 
+            null
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = if (isSelected) 
+                    MaterialTheme.colorScheme.primary 
+                else 
+                    MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(32.dp)
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                color = if (isSelected) 
+                    MaterialTheme.colorScheme.primary 
+                else 
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+fun StatisticCard(
+    label: String,
+    value: String,
+    icon: ImageVector,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(color.copy(alpha = 0.2f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = color,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = color
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

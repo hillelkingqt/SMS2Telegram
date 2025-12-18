@@ -79,6 +79,7 @@ fun PermissionWrapper(content: @Composable () -> Unit) {
     }
 
     var permissionsGranted by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -94,7 +95,13 @@ fun PermissionWrapper(content: @Composable () -> Unit) {
                  context.startService(intent)
              }
         } else {
-            // Show rationale? For now just proceed but features might break
+            // Show snackbar about missing permissions
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    message = "Some permissions were denied. App features may be limited.",
+                    duration = androidx.compose.material3.SnackbarDuration.Long
+                )
+            }
         }
     }
 

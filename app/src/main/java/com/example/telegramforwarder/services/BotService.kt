@@ -453,8 +453,16 @@ class BotService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(batteryReceiver)
-        telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE)
+        try {
+            unregisterReceiver(batteryReceiver)
+        } catch (e: Exception) {
+            Log.e("BotService", "Error unregistering battery receiver: ${e.message}")
+        }
+        try {
+            telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE)
+        } catch (e: Exception) {
+            Log.e("BotService", "Error stopping phone state listener: ${e.message}")
+        }
         serviceScope.cancel()
     }
 }
