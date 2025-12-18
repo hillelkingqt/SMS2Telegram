@@ -79,6 +79,7 @@ fun PermissionWrapper(content: @Composable () -> Unit) {
     }
 
     var permissionsGranted by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -103,8 +104,6 @@ fun PermissionWrapper(content: @Composable () -> Unit) {
             }
         }
     }
-
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         launcher.launch(permissions.toTypedArray())
