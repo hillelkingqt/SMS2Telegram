@@ -108,11 +108,6 @@ fun HomeScreen(
         }
     )
 
-    // Animation state
-    val visibleState = remember {
-        MutableTransitionState(false).apply { targetState = true }
-    }
-
     LaunchedEffect(Unit) {
         if (!hasSmsPermission) {
             launcher.launch(
@@ -151,14 +146,7 @@ fun HomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.surface,
-                            MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    )
-                )
+                .background(MaterialTheme.colorScheme.background)
                 .padding(paddingValues)
         ) {
             Column(
@@ -166,20 +154,16 @@ fun HomeScreen(
             ) {
                 // Search Bar
                 if (allMessages.isNotEmpty()) {
-                    AnimatedVisibility(
-                        visible = true,
-                        enter = fadeIn() + slideInVertically()
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                     ) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface
-                            ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                        ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -237,47 +221,37 @@ fun HomeScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        AnimatedVisibility(
-                            visibleState = visibleState,
-                            enter = fadeIn(animationSpec = tween(700)) + slideInVertically(
-                                initialOffsetY = { 50 },
-                                animationSpec = tween(700)
-                            )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            Box(
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.primaryContainer,
+                                        RoundedCornerShape(50.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(120.dp)
-                                        .background(
-                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                                            RoundedCornerShape(60.dp)
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Notifications,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(60.dp),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                                Text(
-                                    text = "No messages yet",
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = "Incoming SMS\nwill appear here",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = TextAlign.Center,
-                                    lineHeight = 24.sp
+                                Icon(
+                                    imageVector = Icons.Default.Notifications,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(50.dp),
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
+                            Text(
+                                text = "No messages yet",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Incoming SMS\nwill appear here",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
                         }
                     }
                 } else if (messages.isEmpty() && searchQuery.isNotEmpty()) {
@@ -312,27 +286,15 @@ fun HomeScreen(
                 } else {
                     LazyColumn(
                         contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         itemsIndexed(messages) { index, message ->
-                            // Staggered animation for list items
-                            AnimatedVisibility(
-                                visibleState = visibleState,
-                                enter = slideInVertically(
-                                    animationSpec = tween(
-                                        durationMillis = 300,
-                                        delayMillis = index * 50 // Stagger by 50ms
-                                    ),
-                                    initialOffsetY = { 50 }
-                                ) + fadeIn(animationSpec = tween(300))
-                            ) {
-                                MessageItem(
-                                    sender = message.sender,
-                                    content = message.content,
-                                    timestamp = message.timestamp,
-                                    type = message.type
-                                )
-                            }
+                            MessageItem(
+                                sender = message.sender,
+                                content = message.content,
+                                timestamp = message.timestamp,
+                                type = message.type
+                            )
                         }
                     }
                 }

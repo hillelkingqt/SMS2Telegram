@@ -1,6 +1,5 @@
 package com.example.telegramforwarder.ui.components
 
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
@@ -12,14 +11,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun IOSHeader(
+fun AppHeader(
     title: String,
     onBackClick: (() -> Unit)? = null,
     onSettingsClick: (() -> Unit)? = null
@@ -29,8 +25,7 @@ fun IOSHeader(
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp
+                fontWeight = FontWeight.Bold
             )
         },
         navigationIcon = {
@@ -38,8 +33,7 @@ fun IOSHeader(
                 IconButton(onClick = onBackClick) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.primary
+                        contentDescription = "Back"
                     )
                 }
             }
@@ -49,17 +43,21 @@ fun IOSHeader(
                 IconButton(onClick = onSettingsClick) {
                     Icon(
                         imageVector = Icons.Default.Settings,
-                        contentDescription = "Settings",
-                        tint = MaterialTheme.colorScheme.primary
+                        contentDescription = "Settings"
                     )
                 }
             }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.95f),
-            titleContentColor = MaterialTheme.colorScheme.onBackground,
-            actionIconContentColor = MaterialTheme.colorScheme.primary,
-            navigationIconContentColor = MaterialTheme.colorScheme.primary
+            containerColor = MaterialTheme.colorScheme.surface
         )
     )
 }
+
+// Keep backward compatibility
+@Composable
+fun IOSHeader(
+    title: String,
+    onBackClick: (() -> Unit)? = null,
+    onSettingsClick: (() -> Unit)? = null
+) = AppHeader(title, onBackClick, onSettingsClick)
