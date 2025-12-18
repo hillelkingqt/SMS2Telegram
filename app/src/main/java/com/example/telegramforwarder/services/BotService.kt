@@ -19,6 +19,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.example.telegramforwarder.R
+import com.example.telegramforwarder.data.local.AppDatabase
 import com.example.telegramforwarder.data.local.ContactHelper
 import com.example.telegramforwarder.data.local.UserPreferences
 import com.example.telegramforwarder.data.remote.TelegramRepository
@@ -32,8 +33,11 @@ class BotService : Service() {
     private lateinit var userPreferences: UserPreferences
     private lateinit var contactHelper: ContactHelper
 
+    // Database
+    private lateinit var database: AppDatabase
+
     // State
-    private var isPolling = false
+    private var isBotPollingEnabled = false
     private var botToken: String? = null
     private var chatId: String? = null
     private var lastUpdateId: Long = 0
@@ -118,9 +122,28 @@ class BotService : Service() {
         // Register Phone Listener
         telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE)
 
+        // Initialize Database
+        database = AppDatabase.getDatabase(applicationContext)
+
         // Start Loops
         startConfigurationObserver()
         startPollingLoop()
+        startCleanupLoop()
+    }
+
+    private fun startCleanupLoop() {
+        serviceScope.launch {
+            while (isActive) {
+                try {
+                    val cutoff = System.currentTimeMillis() - 30 * 60 * 1000 // 30 minutes ago
+                    database.logDao().deleteOldLogs(cutoff)
+                    database.messageDao().deleteOldMessages(cutoff)
+                } catch (e: Exception) {
+                    Log.e("BotService", "Error during cleanup: ${e.message}")
+                }
+                delay(15 * 60 * 1000) // Check every 15 minutes
+            }
+        }
     }
 
     private fun createNotification(): Notification {
@@ -157,6 +180,9 @@ class BotService : Service() {
         }
         serviceScope.launch {
             userPreferences.isMissedCallEnabled.collect { isMissedCallEnabled = it }
+        }
+        serviceScope.launch {
+            userPreferences.isBotPollingEnabled.collect { isBotPollingEnabled = it }
         }
     }
 
@@ -206,21 +232,34 @@ class BotService : Service() {
 
     private fun startPollingLoop() {
         serviceScope.launch {
+            var errorBackoff = 2000L
             while (isActive) {
-                if (botToken != null) {
+                if (botToken != null && isBotPollingEnabled) {
                     try {
+                        // Use a short timeout if we are just checking, but here we want long polling.
+                        // If we are disabled, we shouldn't be here? No, the loop runs always but checks flag.
                         val response = TelegramRepository.getUpdates(botToken!!, lastUpdateId + 1)
                         if (response != null && response.ok) {
+                            errorBackoff = 2000L // Reset backoff on success
                             for (update in response.result) {
                                 lastUpdateId = update.updateId
                                 processUpdate(update)
                             }
+                            delay(500) // Short delay if success/timeout returned normally
+                        } else {
+                            // If response is null or not ok (network error?), backoff
+                            delay(errorBackoff)
+                            errorBackoff = (errorBackoff * 2).coerceAtMost(60000L) // Exponential backoff max 1 min
                         }
                     } catch (e: Exception) {
                         Log.e("BotService", "Polling error: ${e.message}")
+                        delay(errorBackoff)
+                        errorBackoff = (errorBackoff * 2).coerceAtMost(60000L)
                     }
+                } else {
+                    // If disabled or no token, wait longer to save battery
+                    delay(10000)
                 }
-                delay(2000) // Poll every 2 seconds
             }
         }
     }

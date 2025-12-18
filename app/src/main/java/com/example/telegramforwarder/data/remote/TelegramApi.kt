@@ -1,13 +1,12 @@
 package com.example.telegramforwarder.data.remote
 
-import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.ConcurrentHashMap
 
 // Data classes for getUpdates response
 data class UpdateResponse(
@@ -59,7 +58,7 @@ interface TelegramApi {
     suspend fun getUpdates(
         @Query("offset") offset: Long? = null,
         @Query("timeout") timeout: Int = 30, // Long polling
-        @Query("allowed_updates") allowedUpdates: String = "[\"message\", " + "\"callback_query\"]"
+        @Query("allowed_updates") allowedUpdates: String = "[\"message\", \"callback_query\"]"
     ): UpdateResponse
 
     @GET("answerCallbackQuery")
@@ -78,28 +77,31 @@ object TelegramRepository {
 
     private const val BASE_URL = "https://api.telegram.org/"
 
-    // Cache the retrofit instance or recreate if token changes?
-    // For simplicity, we create one per request or use a builder function,
-    // but better to allow passing token.
-
-    private fun getApi(botToken: String): TelegramApi {
+    // Single OkHttpClient instance
+    private val client: OkHttpClient by lazy {
         val logging = HttpLoggingInterceptor()
-        logging.setLevel(HttpLoggingInterceptor.Level.NONE) // Don't log full body to avoid spam, or BASIC
+        logging.setLevel(HttpLoggingInterceptor.Level.NONE) // Don't log full body to avoid spam
 
-        val client = OkHttpClient.Builder()
+        OkHttpClient.Builder()
             .addInterceptor(logging)
             .connectTimeout(40, TimeUnit.SECONDS) // Slightly more than long poll timeout
             .readTimeout(40, TimeUnit.SECONDS)
             .writeTimeout(40, TimeUnit.SECONDS)
             .build()
+    }
 
-        val retrofit = retrofit2.Retrofit.Builder()
-            .baseUrl("${BASE_URL}bot$botToken/")
-            .client(client)
-            .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create())
-            .build()
+    // Cache for TelegramApi instances
+    private val apiCache = ConcurrentHashMap<String, TelegramApi>()
 
-        return retrofit.create(TelegramApi::class.java)
+    private fun getApi(botToken: String): TelegramApi {
+        return apiCache.getOrPut(botToken) {
+            val retrofit = retrofit2.Retrofit.Builder()
+                .baseUrl("${BASE_URL}bot$botToken/")
+                .client(client)
+                .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create())
+                .build()
+            retrofit.create(TelegramApi::class.java)
+        }
     }
 
     suspend fun sendMessage(botToken: String, chatId: String, message: String, replyMarkup: String? = null): TelegramResponse {

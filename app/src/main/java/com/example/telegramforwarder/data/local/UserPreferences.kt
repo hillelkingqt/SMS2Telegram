@@ -28,6 +28,7 @@ class UserPreferences(private val context: Context) {
         val IS_BATTERY_NOTIFY_ENABLED = booleanPreferencesKey("is_battery_notify_enabled")
         val BATTERY_LOW_THRESHOLD = floatPreferencesKey("battery_low_threshold")
         val BATTERY_HIGH_THRESHOLD = floatPreferencesKey("battery_high_threshold")
+        val IS_BOT_POLLING_ENABLED = booleanPreferencesKey("is_bot_polling_enabled")
     }
 
     val botToken: Flow<String?> = context.dataStore.data.map { preferences ->
@@ -68,6 +69,10 @@ class UserPreferences(private val context: Context) {
 
     val batteryHighThreshold: Flow<Float> = context.dataStore.data.map { preferences ->
         preferences[BATTERY_HIGH_THRESHOLD] ?: 90f
+    }
+
+    val isBotPollingEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_BOT_POLLING_ENABLED] ?: false
     }
 
     suspend fun saveBotToken(token: String) {
@@ -127,6 +132,12 @@ class UserPreferences(private val context: Context) {
     suspend fun setBatteryHighThreshold(value: Float) {
         context.dataStore.edit { preferences ->
             preferences[BATTERY_HIGH_THRESHOLD] = value
+        }
+    }
+
+    suspend fun setBotPollingEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_BOT_POLLING_ENABLED] = enabled
         }
     }
 }

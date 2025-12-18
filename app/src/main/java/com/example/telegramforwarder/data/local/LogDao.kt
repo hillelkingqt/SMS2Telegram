@@ -15,4 +15,7 @@ interface LogDao {
 
     @Query("DELETE FROM app_logs")
     suspend fun clearLogs()
+
+    @Query("DELETE FROM app_logs WHERE timestamp < :timestamp")
+    suspend fun deleteOldLogs(timestamp: Long)
 }

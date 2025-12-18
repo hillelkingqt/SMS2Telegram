@@ -60,6 +60,7 @@ fun SettingsScreen(
     val isBatteryNotifyEnabled by preferences.isBatteryNotifyEnabled.collectAsState(initial = false)
     val batteryLowThreshold by preferences.batteryLowThreshold.collectAsState(initial = 20f)
     val batteryHighThreshold by preferences.batteryHighThreshold.collectAsState(initial = 90f)
+    val isBotPollingEnabled by preferences.isBotPollingEnabled.collectAsState(initial = false)
 
     var tokenInput by remember { mutableStateOf("") }
     var chatInput by remember { mutableStateOf("") }
@@ -288,6 +289,14 @@ fun SettingsScreen(
                 item {
                     AnimatedEntry(visibleState, 400) {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            SettingsSwitchCard(
+                                title = "Remote Control Bot",
+                                subtitle = "Allow sending SMS via Telegram commands (consumes battery)",
+                                icon = Icons.Default.SmartToy,
+                                checked = isBotPollingEnabled,
+                                onCheckedChange = { scope.launch { preferences.setBotPollingEnabled(it) } }
+                            )
+
                             BeautifulTextField(
                                 value = tokenInput,
                                 onValueChange = { tokenInput = it },
