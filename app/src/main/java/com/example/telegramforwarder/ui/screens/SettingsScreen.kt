@@ -59,9 +59,6 @@ fun SettingsScreen(
         if (botToken != null) tokenInput = botToken!!
         if (chatId != null) chatInput = chatId!!
     }
-
-    val visibleState = remember { androidx.compose.animation.core.MutableTransitionState(true) }
-
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -97,403 +94,374 @@ fun SettingsScreen(
 
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            SettingsSwitchCard(
-                                title = "Forward SMS",
-                                subtitle = "Intercept and forward incoming SMS",
-                                icon = Icons.Default.Sms,
-                                checked = isSmsEnabled,
-                                onCheckedChange = { scope.launch { preferences.setSmsEnabled(it) } }
-                            )
-                             SettingsSwitchCard(
-                                title = "Missed Call Notifications",
-                                subtitle = "Notify when a call is missed or rejected",
-                                icon = Icons.Default.PhoneMissed,
-                                checked = isMissedCallEnabled,
-                                onCheckedChange = { scope.launch { preferences.setMissedCallEnabled(it) } }
-                            )
-                        }
+                        SettingsSwitchCard(
+                            title = "Forward SMS",
+                            subtitle = "Intercept and forward incoming SMS",
+                            icon = Icons.Default.Sms,
+                            checked = isSmsEnabled,
+                            onCheckedChange = { scope.launch { preferences.setSmsEnabled(it) } }
+                        )
+                        SettingsSwitchCard(
+                            title = "Missed Call Notifications",
+                            subtitle = "Notify when a call is missed or rejected",
+                            icon = Icons.Default.PhoneMissed,
+                            checked = isMissedCallEnabled,
+                            onCheckedChange = { scope.launch { preferences.setMissedCallEnabled(it) } }
+                        )
                     }
                 }
 
                 // --- Battery Options ---
-                 item {
-                    AnimatedEntry(visibleState, 150) {
-                        SettingsSectionTitle("Battery Monitoring")
-                    }
+                item {
+                    SettingsSectionTitle("Battery Monitoring")
                 }
 
                 item {
-                    AnimatedEntry(visibleState, 180) {
-                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            SettingsSwitchCard(
-                                title = "Battery Alerts",
-                                subtitle = "Notify on low/high battery levels",
-                                icon = Icons.Default.BatteryAlert,
-                                checked = isBatteryNotifyEnabled,
-                                onCheckedChange = { scope.launch { preferences.setBatteryNotifyEnabled(it) } }
-                            )
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        SettingsSwitchCard(
+                        title = "Battery Alerts",
+                        subtitle = "Notify on low/high battery levels",
+                        icon = Icons.Default.BatteryAlert,
+                        checked = isBatteryNotifyEnabled,
+                        onCheckedChange = { scope.launch { preferences.setBatteryNotifyEnabled(it) } }
+                        )
 
-                            if (isBatteryNotifyEnabled) {
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                                ) {
-                                    Column(modifier = Modifier.padding(16.dp)) {
-                                        Text("Low Battery Threshold: ${batteryLowThreshold.toInt()}%", fontWeight = FontWeight.SemiBold)
-                                        Slider(
-                                            value = batteryLowThreshold,
-                                            onValueChange = { scope.launch { preferences.setBatteryLowThreshold(it) } },
-                                            valueRange = 0f..50f,
-                                            steps = 49
-                                        )
+                        if (isBatteryNotifyEnabled) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text("Low Battery Threshold: ${batteryLowThreshold.toInt()}%", fontWeight = FontWeight.SemiBold)
+                                Slider(
+                                    value = batteryLowThreshold,
+                                    onValueChange = { scope.launch { preferences.setBatteryLowThreshold(it) } },
+                                    valueRange = 0f..50f,
+                                    steps = 49
+                                )
 
-                                        Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
 
-                                        Text("High Battery Threshold: ${batteryHighThreshold.toInt()}%", fontWeight = FontWeight.SemiBold)
-                                        Slider(
-                                            value = batteryHighThreshold,
-                                            onValueChange = { scope.launch { preferences.setBatteryHighThreshold(it) } },
-                                            valueRange = 50f..100f,
-                                            steps = 49
-                                        )
-                                    }
-                                }
+                                Text("High Battery Threshold: ${batteryHighThreshold.toInt()}%", fontWeight = FontWeight.SemiBold)
+                                Slider(
+                                    value = batteryHighThreshold,
+                                    onValueChange = { scope.launch { preferences.setBatteryHighThreshold(it) } },
+                                    valueRange = 50f..100f,
+                                    steps = 49
+                                )
                             }
                         }
+                        }
+                    }
                     }
                 }
 
                 // --- Gemini Configuration ---
                 item {
-                    AnimatedEntry(visibleState, 200) {
-                        SettingsSectionTitle("Gemini AI Configuration")
-                    }
+                    SettingsSectionTitle("Gemini AI Configuration")
                 }
 
                 item {
-                    AnimatedEntry(visibleState, 250) {
-                        Card(
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(
-                                    "API Keys",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    "Add multiple keys for redundancy. The system will rotate through them if one fails.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            "API Keys",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "Add multiple keys for redundancy. The system will rotate through them if one fails.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                                // List of existing keys
-                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    geminiApiKeys.forEachIndexed { index, key ->
-                                        GeminiKeyItem(
-                                            index = index,
-                                            key = key,
-                                            onDelete = {
-                                                val newList = geminiApiKeys.toMutableList().apply { removeAt(index) }
-                                                scope.launch { preferences.saveGeminiKeys(newList) }
-                                            }
-                                        )
+                            // List of existing keys
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            geminiApiKeys.forEachIndexed { index, key ->
+                                GeminiKeyItem(
+                                    index = index,
+                                    key = key,
+                                    onDelete = {
+                                        val newList = geminiApiKeys.toMutableList().apply { removeAt(index) }
+                                        scope.launch { preferences.saveGeminiKeys(newList) }
                                     }
-                                }
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                // Add new key
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    BeautifulTextField(
-                                        value = newGeminiKeyInput,
-                                        onValueChange = { newGeminiKeyInput = it },
-                                        label = "New Gemini API Key",
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    IconButton(
-                                        onClick = {
-                                            if (newGeminiKeyInput.isNotBlank()) {
-                                                val newList = geminiApiKeys + newGeminiKeyInput.trim()
-                                                scope.launch { preferences.saveGeminiKeys(newList) }
-                                                newGeminiKeyInput = ""
-                                            }
-                                        },
-                                        modifier = Modifier
-                                            .background(MaterialTheme.colorScheme.primary, CircleShape)
-                                            .size(48.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Add,
-                                            contentDescription = "Add",
-                                            tint = MaterialTheme.colorScheme.onPrimary
-                                        )
-                                    }
-                                }
+                                )
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                            // Add new key
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            BeautifulTextField(
+                                value = newGeminiKeyInput,
+                                onValueChange = { newGeminiKeyInput = it },
+                                label = "New Gemini API Key",
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            IconButton(
+                                onClick = {
+                                    if (newGeminiKeyInput.isNotBlank()) {
+                                        val newList = geminiApiKeys + newGeminiKeyInput.trim()
+                                        scope.launch { preferences.saveGeminiKeys(newList) }
+                                        newGeminiKeyInput = ""
+                                    }
+                                },
+                                modifier = Modifier
+                                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+                                    .size(48.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = "Add",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        }
+                        }
+                    }
                     }
                 }
 
                 // --- Telegram Configuration ---
                 item {
-                    AnimatedEntry(visibleState, 300) {
-                        SettingsSectionTitle("Telegram Configuration")
+                    SettingsSectionTitle("Telegram Configuration")
+                }
+
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        SettingsSwitchCard(
+                        title = "Remote Control Bot",
+                        subtitle = "Allow sending SMS via Telegram commands (consumes battery)",
+                        icon = Icons.Default.SmartToy,
+                        checked = isBotPollingEnabled,
+                        onCheckedChange = { scope.launch { preferences.setBotPollingEnabled(it) } }
+                        )
+
+                        BeautifulTextField(
+                        value = tokenInput,
+                        onValueChange = { tokenInput = it },
+                        label = "Bot Token"
+                        )
+                        BeautifulTextField(
+                        value = chatInput,
+                        onValueChange = { chatInput = it },
+                        label = "Chat ID"
+                        )
+                    }
                     }
                 }
 
                 item {
-                    AnimatedEntry(visibleState, 400) {
-                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            SettingsSwitchCard(
-                                title = "Remote Control Bot",
-                                subtitle = "Allow sending SMS via Telegram commands (consumes battery)",
-                                icon = Icons.Default.SmartToy,
-                                checked = isBotPollingEnabled,
-                                onCheckedChange = { scope.launch { preferences.setBotPollingEnabled(it) } }
+                    Button(
+                        onClick = {
+                        scope.launch {
+                            preferences.saveBotToken(tokenInput)
+                            preferences.saveChatId(chatInput)
+
+                            isTestingConnection = true
+                            val response = TelegramRepository.sendMessage(
+                                botToken = tokenInput.trim(),
+                                chatId = chatInput.trim(),
+                                message = "DONE"
                             )
+                            isTestingConnection = false
 
-                            BeautifulTextField(
-                                value = tokenInput,
-                                onValueChange = { tokenInput = it },
-                                label = "Bot Token"
-                            )
-                            BeautifulTextField(
-                                value = chatInput,
-                                onValueChange = { chatInput = it },
-                                label = "Chat ID"
-                            )
-                        }
-                    }
-                }
+                            if (response.success) {
+                                snackbarHostState.showSnackbar("Saved & Verified!")
 
-                item {
-                    AnimatedEntry(visibleState, 500) {
-                        Button(
-                            onClick = {
-                                scope.launch {
-                                    preferences.saveBotToken(tokenInput)
-                                    preferences.saveChatId(chatInput)
+                                    // Start Polling Service on successful verify
+                                val serviceIntent = Intent(context, BotService::class.java)
+                                context.startForegroundService(serviceIntent)
 
-                                    isTestingConnection = true
-                                    val response = TelegramRepository.sendMessage(
-                                        botToken = tokenInput.trim(),
-                                        chatId = chatInput.trim(),
-                                        message = "DONE"
-                                    )
-                                    isTestingConnection = false
-
-                                    if (response.success) {
-                                        snackbarHostState.showSnackbar("Saved & Verified!")
-
-                                        // Start Polling Service on successful verify
-                                        val serviceIntent = Intent(context, BotService::class.java)
-                                        context.startForegroundService(serviceIntent)
-
-                                    } else {
-                                        snackbarHostState.showSnackbar("Failed: ${response.message}")
-                                    }
-                                }
-                            },
-                            enabled = !isTestingConnection,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            if (isTestingConnection) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    strokeWidth = 2.dp
-                                )
                             } else {
-                                Text("Save & Verify Connection", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                snackbarHostState.showSnackbar("Failed: ${response.message}")
                             }
+                        }
+                        },
+                        enabled = !isTestingConnection,
+                        modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        if (isTestingConnection) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                        } else {
+                        Text("Save & Verify Connection", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
 
                 // --- Appearance ---
                 item {
-                    AnimatedEntry(visibleState, 550) {
-                        SettingsSectionTitle("Appearance")
-                    }
+                    SettingsSectionTitle("Appearance")
                 }
 
                 item {
-                    AnimatedEntry(visibleState, 580) {
-                        val themeMode by preferences.themeMode.collectAsState(initial = "system")
+                    val themeMode by preferences.themeMode.collectAsState(initial = "system")
+                    
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            "Theme",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
                         
-                        Card(
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface
-                            ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(
-                                    "Theme",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Spacer(modifier = Modifier.height(12.dp))
-                                
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    ThemeOption(
-                                        title = "System",
-                                        icon = Icons.Default.PhoneAndroid,
-                                        isSelected = themeMode == "system",
-                                        onClick = { scope.launch { preferences.saveThemeMode("system") } },
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    ThemeOption(
-                                        title = "Light",
-                                        icon = Icons.Default.LightMode,
-                                        isSelected = themeMode == "light",
-                                        onClick = { scope.launch { preferences.saveThemeMode("light") } },
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    ThemeOption(
-                                        title = "Dark",
-                                        icon = Icons.Default.DarkMode,
-                                        isSelected = themeMode == "dark",
-                                        onClick = { scope.launch { preferences.saveThemeMode("dark") } },
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                            }
+                            ThemeOption(
+                                title = "System",
+                                icon = Icons.Default.PhoneAndroid,
+                                isSelected = themeMode == "system",
+                                onClick = { scope.launch { preferences.saveThemeMode("system") } },
+                                modifier = Modifier.weight(1f)
+                            )
+                            ThemeOption(
+                                title = "Light",
+                                icon = Icons.Default.LightMode,
+                                isSelected = themeMode == "light",
+                                onClick = { scope.launch { preferences.saveThemeMode("light") } },
+                                modifier = Modifier.weight(1f)
+                            )
+                            ThemeOption(
+                                title = "Dark",
+                                icon = Icons.Default.DarkMode,
+                                isSelected = themeMode == "dark",
+                                onClick = { scope.launch { preferences.saveThemeMode("dark") } },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
+                        }
+                    }
                     }
                 }
 
                 // --- Diagnostics ---
                 item {
-                    AnimatedEntry(visibleState, 600) {
-                        SettingsSectionTitle("Diagnostics")
-                    }
+                    SettingsSectionTitle("Diagnostics")
                 }
 
                 item {
-                    AnimatedEntry(visibleState, 700) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onNavigateToLogs() },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
-                            )
+                    Card(
+                        modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onNavigateToLogs() },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        Row(
+                        modifier = Modifier.padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.padding(20.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .background(MaterialTheme.colorScheme.secondary, CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(Icons.Default.Notes, contentDescription = null, tint = Color.White)
-                                }
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Column {
-                                    Text("System Logs", fontWeight = FontWeight.Bold)
-                                    Text("View debugging logs", style = MaterialTheme.typography.bodySmall)
-                                }
-                                Spacer(modifier = Modifier.weight(1f))
-                                Icon(Icons.Default.ChevronRight, contentDescription = null)
-                            }
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(MaterialTheme.colorScheme.secondary, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Notes, contentDescription = null, tint = Color.White)
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text("System Logs", fontWeight = FontWeight.Bold)
+                            Text("View debugging logs", style = MaterialTheme.typography.bodySmall)
+                        }
+                        Spacer(modifier = Modifier.weight(1f))
+                        Icon(Icons.Default.ChevronRight, contentDescription = null)
                         }
                     }
-                }
+                    }
 
                 item {
-                    AnimatedEntry(visibleState, 750) {
-                        val database = remember { com.example.telegramforwarder.data.local.AppDatabase.getDatabase(context) }
-                        var showClearDialog by remember { mutableStateOf(false) }
-                        
-                        if (showClearDialog) {
-                            androidx.compose.material3.AlertDialog(
-                                onDismissRequest = { showClearDialog = false },
-                                title = { Text("Clear Messages") },
-                                text = { Text("This will delete all stored messages. This action cannot be undone.") },
-                                confirmButton = {
-                                    androidx.compose.material3.TextButton(
-                                        onClick = {
-                                            scope.launch {
-                                                database.messageDao().deleteAllMessages()
-                                                snackbarHostState.showSnackbar("All messages cleared")
-                                            }
-                                            showClearDialog = false
-                                        }
-                                    ) {
-                                        Text("Clear", color = MaterialTheme.colorScheme.error)
+                    val database = remember { com.example.telegramforwarder.data.local.AppDatabase.getDatabase(context) }
+                    var showClearDialog by remember { mutableStateOf(false) }
+                    
+                    if (showClearDialog) {
+                        androidx.compose.material3.AlertDialog(
+                        onDismissRequest = { showClearDialog = false },
+                        title = { Text("Clear Messages") },
+                        text = { Text("This will delete all stored messages. This action cannot be undone.") },
+                        confirmButton = {
+                            androidx.compose.material3.TextButton(
+                                onClick = {
+                                    scope.launch {
+                                        database.messageDao().deleteAllMessages()
+                                        snackbarHostState.showSnackbar("All messages cleared")
                                     }
-                                },
-                                dismissButton = {
-                                    androidx.compose.material3.TextButton(onClick = { showClearDialog = false }) {
-                                        Text("Cancel")
-                                    }
+                                    showClearDialog = false
                                 }
-                            )
-                        }
-                        
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { showClearDialog = true },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-                            )
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(20.dp),
-                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .background(MaterialTheme.colorScheme.error, CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(Icons.Default.DeleteForever, contentDescription = null, tint = Color.White)
-                                }
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Column {
-                                    Text("Clear Messages", fontWeight = FontWeight.Bold)
-                                    Text("Delete all stored messages", style = MaterialTheme.typography.bodySmall)
-                                }
-                                Spacer(modifier = Modifier.weight(1f))
-                                Icon(Icons.Default.ChevronRight, contentDescription = null)
+                                Text("Clear", color = MaterialTheme.colorScheme.error)
+                            }
+                        },
+                        dismissButton = {
+                            androidx.compose.material3.TextButton(onClick = { showClearDialog = false }) {
+                                Text("Cancel")
                             }
                         }
+                        )
+                    }
+                    
+                    Card(
+                        modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showClearDialog = true },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                        )
+                    ) {
+                        Row(
+                        modifier = Modifier.padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                        ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(MaterialTheme.colorScheme.error, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.DeleteForever, contentDescription = null, tint = Color.White)
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text("Clear Messages", fontWeight = FontWeight.Bold)
+                            Text("Delete all stored messages", style = MaterialTheme.typography.bodySmall)
+                        }
+                        Spacer(modifier = Modifier.weight(1f))
+                        Icon(Icons.Default.ChevronRight, contentDescription = null)
+                        }
+                    }
                     }
                 }
             }
         }
     }
-}
-
-@Composable
-fun AnimatedEntry(
-    visibleState: MutableTransitionState<Boolean>,
-    delay: Int,
-    content: @Composable () -> Unit
-) {
-    content()
 }
 
 @Composable
@@ -535,8 +503,8 @@ fun SettingsSwitchCard(
                 modifier = Modifier
                     .size(40.dp)
                     .background(
-                        if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                        CircleShape
+                    if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    CircleShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
