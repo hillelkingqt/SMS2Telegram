@@ -70,7 +70,8 @@ fun HomeScreen(
     // Permission States
     var hasSmsPermission by remember {
         mutableStateOf(
-            ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED
         )
     }
 
@@ -83,7 +84,9 @@ fun HomeScreen(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { perms ->
-            hasSmsPermission = perms[Manifest.permission.RECEIVE_SMS] == true
+            hasSmsPermission =
+                perms[Manifest.permission.RECEIVE_SMS] == true &&
+                        perms[Manifest.permission.SEND_SMS] == true
         }
     )
 
@@ -97,7 +100,8 @@ fun HomeScreen(
             launcher.launch(
                 arrayOf(
                     Manifest.permission.RECEIVE_SMS,
-                    Manifest.permission.READ_SMS
+                    Manifest.permission.READ_SMS,
+                    Manifest.permission.SEND_SMS
                 )
             )
         }

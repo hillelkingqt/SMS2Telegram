@@ -89,8 +89,7 @@ fun SettingsScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent
-                ),
-                modifier = Modifier.statusBarsPadding()
+                )
             )
         },
         // Handle keyboard overlap
