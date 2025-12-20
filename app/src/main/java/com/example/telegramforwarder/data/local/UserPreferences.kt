@@ -29,6 +29,18 @@ class UserPreferences(private val context: Context) {
         val BATTERY_LOW_THRESHOLD = floatPreferencesKey("battery_low_threshold")
         val BATTERY_HIGH_THRESHOLD = floatPreferencesKey("battery_high_threshold")
         val IS_BOT_POLLING_ENABLED = booleanPreferencesKey("is_bot_polling_enabled")
+
+        // New System Event Triggers
+        val IS_NOTIFY_BOOT_COMPLETED = booleanPreferencesKey("is_notify_boot_completed")
+        val IS_NOTIFY_APP_UPDATED = booleanPreferencesKey("is_notify_app_updated")
+        val IS_NOTIFY_POWER_CONNECTED = booleanPreferencesKey("is_notify_power_connected")
+        val IS_NOTIFY_POWER_DISCONNECTED = booleanPreferencesKey("is_notify_power_disconnected")
+        val IS_NOTIFY_AIRPLANE_MODE_ON = booleanPreferencesKey("is_notify_airplane_mode_on")
+        val IS_NOTIFY_AIRPLANE_MODE_OFF = booleanPreferencesKey("is_notify_airplane_mode_off")
+        val IS_NOTIFY_WIFI_CONNECTED = booleanPreferencesKey("is_notify_wifi_connected")
+        val IS_NOTIFY_WIFI_DISCONNECTED = booleanPreferencesKey("is_notify_wifi_disconnected")
+        val IS_NOTIFY_BLUETOOTH_CONNECTED = booleanPreferencesKey("is_notify_bluetooth_connected")
+        val IS_NOTIFY_BLUETOOTH_DISCONNECTED = booleanPreferencesKey("is_notify_bluetooth_disconnected")
     }
 
     val botToken: Flow<String?> = context.dataStore.data.map { preferences ->
@@ -74,6 +86,18 @@ class UserPreferences(private val context: Context) {
     val isBotPollingEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[IS_BOT_POLLING_ENABLED] ?: false
     }
+
+    // New System Event Flows
+    val isNotifyBootCompleted: Flow<Boolean> = context.dataStore.data.map { preferences -> preferences[IS_NOTIFY_BOOT_COMPLETED] ?: true }
+    val isNotifyAppUpdated: Flow<Boolean> = context.dataStore.data.map { preferences -> preferences[IS_NOTIFY_APP_UPDATED] ?: true }
+    val isNotifyPowerConnected: Flow<Boolean> = context.dataStore.data.map { preferences -> preferences[IS_NOTIFY_POWER_CONNECTED] ?: false }
+    val isNotifyPowerDisconnected: Flow<Boolean> = context.dataStore.data.map { preferences -> preferences[IS_NOTIFY_POWER_DISCONNECTED] ?: false }
+    val isNotifyAirplaneModeOn: Flow<Boolean> = context.dataStore.data.map { preferences -> preferences[IS_NOTIFY_AIRPLANE_MODE_ON] ?: false }
+    val isNotifyAirplaneModeOff: Flow<Boolean> = context.dataStore.data.map { preferences -> preferences[IS_NOTIFY_AIRPLANE_MODE_OFF] ?: false }
+    val isNotifyWifiConnected: Flow<Boolean> = context.dataStore.data.map { preferences -> preferences[IS_NOTIFY_WIFI_CONNECTED] ?: false }
+    val isNotifyWifiDisconnected: Flow<Boolean> = context.dataStore.data.map { preferences -> preferences[IS_NOTIFY_WIFI_DISCONNECTED] ?: false }
+    val isNotifyBluetoothConnected: Flow<Boolean> = context.dataStore.data.map { preferences -> preferences[IS_NOTIFY_BLUETOOTH_CONNECTED] ?: false }
+    val isNotifyBluetoothDisconnected: Flow<Boolean> = context.dataStore.data.map { preferences -> preferences[IS_NOTIFY_BLUETOOTH_DISCONNECTED] ?: false }
 
     suspend fun saveBotToken(token: String) {
         context.dataStore.edit { preferences ->
@@ -140,4 +164,15 @@ class UserPreferences(private val context: Context) {
             preferences[IS_BOT_POLLING_ENABLED] = enabled
         }
     }
+
+    suspend fun setNotifyBootCompleted(enabled: Boolean) { context.dataStore.edit { it[IS_NOTIFY_BOOT_COMPLETED] = enabled } }
+    suspend fun setNotifyAppUpdated(enabled: Boolean) { context.dataStore.edit { it[IS_NOTIFY_APP_UPDATED] = enabled } }
+    suspend fun setNotifyPowerConnected(enabled: Boolean) { context.dataStore.edit { it[IS_NOTIFY_POWER_CONNECTED] = enabled } }
+    suspend fun setNotifyPowerDisconnected(enabled: Boolean) { context.dataStore.edit { it[IS_NOTIFY_POWER_DISCONNECTED] = enabled } }
+    suspend fun setNotifyAirplaneModeOn(enabled: Boolean) { context.dataStore.edit { it[IS_NOTIFY_AIRPLANE_MODE_ON] = enabled } }
+    suspend fun setNotifyAirplaneModeOff(enabled: Boolean) { context.dataStore.edit { it[IS_NOTIFY_AIRPLANE_MODE_OFF] = enabled } }
+    suspend fun setNotifyWifiConnected(enabled: Boolean) { context.dataStore.edit { it[IS_NOTIFY_WIFI_CONNECTED] = enabled } }
+    suspend fun setNotifyWifiDisconnected(enabled: Boolean) { context.dataStore.edit { it[IS_NOTIFY_WIFI_DISCONNECTED] = enabled } }
+    suspend fun setNotifyBluetoothConnected(enabled: Boolean) { context.dataStore.edit { it[IS_NOTIFY_BLUETOOTH_CONNECTED] = enabled } }
+    suspend fun setNotifyBluetoothDisconnected(enabled: Boolean) { context.dataStore.edit { it[IS_NOTIFY_BLUETOOTH_DISCONNECTED] = enabled } }
 }

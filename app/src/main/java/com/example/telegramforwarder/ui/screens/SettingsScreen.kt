@@ -51,6 +51,18 @@ fun SettingsScreen(
     val batteryHighThreshold by preferences.batteryHighThreshold.collectAsState(initial = 90f)
     val isBotPollingEnabled by preferences.isBotPollingEnabled.collectAsState(initial = false)
 
+    // System Events
+    val isNotifyBootCompleted by preferences.isNotifyBootCompleted.collectAsState(initial = true)
+    val isNotifyAppUpdated by preferences.isNotifyAppUpdated.collectAsState(initial = true)
+    val isNotifyPowerConnected by preferences.isNotifyPowerConnected.collectAsState(initial = false)
+    val isNotifyPowerDisconnected by preferences.isNotifyPowerDisconnected.collectAsState(initial = false)
+    val isNotifyAirplaneModeOn by preferences.isNotifyAirplaneModeOn.collectAsState(initial = false)
+    val isNotifyAirplaneModeOff by preferences.isNotifyAirplaneModeOff.collectAsState(initial = false)
+    val isNotifyWifiConnected by preferences.isNotifyWifiConnected.collectAsState(initial = false)
+    val isNotifyWifiDisconnected by preferences.isNotifyWifiDisconnected.collectAsState(initial = false)
+    val isNotifyBluetoothConnected by preferences.isNotifyBluetoothConnected.collectAsState(initial = false)
+    val isNotifyBluetoothDisconnected by preferences.isNotifyBluetoothDisconnected.collectAsState(initial = false)
+
     var tokenInput by remember { mutableStateOf("") }
     var chatInput by remember { mutableStateOf("") }
     var newGeminiKeyInput by remember { mutableStateOf("") }
@@ -111,6 +123,84 @@ fun SettingsScreen(
                             icon = Icons.Default.PhoneMissed,
                             checked = isMissedCallEnabled,
                             onCheckedChange = { scope.launch { preferences.setMissedCallEnabled(it) } }
+                        )
+                    }
+                }
+
+                // --- System Events ---
+                item { SettingsSectionTitle("System Events") }
+
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        SettingsSwitchCard(
+                            title = "Boot Completed",
+                            subtitle = "Notify when device restarts",
+                            icon = Icons.Default.RestartAlt,
+                            checked = isNotifyBootCompleted,
+                            onCheckedChange = { scope.launch { preferences.setNotifyBootCompleted(it) } }
+                        )
+                        SettingsSwitchCard(
+                            title = "App Updated",
+                            subtitle = "Notify when app is updated",
+                            icon = Icons.Default.SystemUpdate,
+                            checked = isNotifyAppUpdated,
+                            onCheckedChange = { scope.launch { preferences.setNotifyAppUpdated(it) } }
+                        )
+                        SettingsSwitchCard(
+                            title = "Power Connected",
+                            subtitle = "Notify when charger is connected",
+                            icon = Icons.Default.Power,
+                            checked = isNotifyPowerConnected,
+                            onCheckedChange = { scope.launch { preferences.setNotifyPowerConnected(it) } }
+                        )
+                        SettingsSwitchCard(
+                            title = "Power Disconnected",
+                            subtitle = "Notify when charger is disconnected",
+                            icon = Icons.Default.PowerOff,
+                            checked = isNotifyPowerDisconnected,
+                            onCheckedChange = { scope.launch { preferences.setNotifyPowerDisconnected(it) } }
+                        )
+                        SettingsSwitchCard(
+                            title = "Airplane Mode On",
+                            subtitle = "Notify when airplane mode enabled",
+                            icon = Icons.Default.Flight,
+                            checked = isNotifyAirplaneModeOn,
+                            onCheckedChange = { scope.launch { preferences.setNotifyAirplaneModeOn(it) } }
+                        )
+                        SettingsSwitchCard(
+                            title = "Airplane Mode Off",
+                            subtitle = "Notify when airplane mode disabled",
+                            icon = Icons.Default.FlightLand,
+                            checked = isNotifyAirplaneModeOff,
+                            onCheckedChange = { scope.launch { preferences.setNotifyAirplaneModeOff(it) } }
+                        )
+                        SettingsSwitchCard(
+                            title = "WiFi Connected",
+                            subtitle = "Notify when WiFi connected",
+                            icon = Icons.Default.Wifi,
+                            checked = isNotifyWifiConnected,
+                            onCheckedChange = { scope.launch { preferences.setNotifyWifiConnected(it) } }
+                        )
+                        SettingsSwitchCard(
+                            title = "WiFi Disconnected",
+                            subtitle = "Notify when WiFi disconnected",
+                            icon = Icons.Default.WifiOff,
+                            checked = isNotifyWifiDisconnected,
+                            onCheckedChange = { scope.launch { preferences.setNotifyWifiDisconnected(it) } }
+                        )
+                        SettingsSwitchCard(
+                            title = "Bluetooth Connected",
+                            subtitle = "Notify when a bluetooth device connects",
+                            icon = Icons.Default.BluetoothConnected,
+                            checked = isNotifyBluetoothConnected,
+                            onCheckedChange = { scope.launch { preferences.setNotifyBluetoothConnected(it) } }
+                        )
+                        SettingsSwitchCard(
+                            title = "Bluetooth Disconnected",
+                            subtitle = "Notify when a bluetooth device disconnects",
+                            icon = Icons.Default.BluetoothDisabled,
+                            checked = isNotifyBluetoothDisconnected,
+                            onCheckedChange = { scope.launch { preferences.setNotifyBluetoothDisconnected(it) } }
                         )
                     }
                 }

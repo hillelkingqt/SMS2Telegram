@@ -13,6 +13,12 @@ import android.Manifest
 import android.os.BatteryManager
 import android.os.Build
 import android.os.IBinder
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.provider.Settings
 import android.telephony.PhoneStateListener
 import android.telephony.TelephonyManager
 import android.util.Log
@@ -51,6 +57,16 @@ class BotService : Service() {
     private var hasNotifiedLow = false
     private var hasNotifiedHigh = false
 
+    // System Event Flags
+    private var isNotifyPowerConnected = false
+    private var isNotifyPowerDisconnected = false
+    private var isNotifyAirplaneModeOn = false
+    private var isNotifyAirplaneModeOff = false
+    private var isNotifyWifiConnected = false
+    private var isNotifyWifiDisconnected = false
+    private var isNotifyBluetoothConnected = false
+    private var isNotifyBluetoothDisconnected = false
+
     // Enhanced Battery Logic State
     private var lastReportedLevel = -1
     private var lastReportTime = 0L
@@ -67,19 +83,68 @@ class BotService : Service() {
     private val CHANNEL_ID = "BotServiceChannel"
 
     // Receivers
-    private val batteryReceiver = object : BroadcastReceiver() {
+    private val systemEventReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == Intent.ACTION_BATTERY_CHANGED) {
-                val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-                val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-                val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-                isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
+            when (intent.action) {
+                Intent.ACTION_BATTERY_CHANGED -> {
+                    val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+                    val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+                    val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+                    val wasCharging = isCharging
+                    isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
 
-                if (level != -1 && scale != -1) {
-                    val pct = (level.toFloat() / scale.toFloat()) * 100f
-                    handleBatteryLevel(pct)
+                    // Handle Power Connect/Disconnect
+                    if (isCharging && !wasCharging) {
+                        if (isNotifyPowerConnected) sendTelegramMessage("🔌 <b>Power Connected</b>")
+                    } else if (!isCharging && wasCharging) {
+                         if (isNotifyPowerDisconnected) sendTelegramMessage("🔌 <b>Power Disconnected</b>")
+                    }
+
+                    if (level != -1 && scale != -1) {
+                        val pct = (level.toFloat() / scale.toFloat()) * 100f
+                        handleBatteryLevel(pct)
+                    }
+                }
+                Intent.ACTION_AIRPLANE_MODE_CHANGED -> {
+                    val isAirplaneModeOn = Settings.Global.getInt(context.contentResolver, Settings.Global.AIRPLANE_MODE_ON, 0) != 0
+                    if (isAirplaneModeOn && isNotifyAirplaneModeOn) {
+                         sendTelegramMessage("✈️ <b>Airplane Mode Enabled</b>")
+                    } else if (!isAirplaneModeOn && isNotifyAirplaneModeOff) {
+                         sendTelegramMessage("✈️ <b>Airplane Mode Disabled</b>")
+                    }
+                }
+                BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED -> {
+                    val state = intent.getIntExtra(BluetoothAdapter.EXTRA_CONNECTION_STATE, BluetoothAdapter.STATE_DISCONNECTED)
+                    if (state == BluetoothAdapter.STATE_CONNECTED) {
+                        if (isNotifyBluetoothConnected) sendTelegramMessage("bluetooth <b>Bluetooth Device Connected</b>")
+                    } else if (state == BluetoothAdapter.STATE_DISCONNECTED) {
+                        if (isNotifyBluetoothDisconnected) sendTelegramMessage("bluetooth <b>Bluetooth Device Disconnected</b>")
+                    }
                 }
             }
+        }
+    }
+
+    // Network Callback
+    private lateinit var connectivityManager: ConnectivityManager
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+             val caps = connectivityManager.getNetworkCapabilities(network)
+             if (caps != null && caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                 if (isNotifyWifiConnected) sendTelegramMessage("📶 <b>WiFi Connected</b>")
+             }
+        }
+
+        override fun onLost(network: Network) {
+             // We can't easily distinguish if lost was wifi unless we track it.
+             // But usually if we lose wifi we want to know.
+             // To be precise we should track if we were on wifi.
+             // Simplification: Just notify lost. Or check if there is another wifi? No.
+             // Actually `onLost` is for the specific network.
+             // If we want "WiFi Disconnected", we should track the active wifi network.
+
+             // Simple approach: trigger "WiFi Disconnected"
+             if (isNotifyWifiDisconnected) sendTelegramMessage("📶 <b>WiFi/Network Disconnected</b>")
         }
     }
 
@@ -125,8 +190,21 @@ class BotService : Service() {
 
         startForeground(NOTIFICATION_ID, createNotification())
 
-        // Register Battery Receiver
-        registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        // Register Receivers
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_BATTERY_CHANGED)
+            addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED)
+            addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED)
+        }
+        registerReceiver(systemEventReceiver, filter)
+
+        // Register Network Callback
+        connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        try {
+            connectivityManager.registerDefaultNetworkCallback(networkCallback)
+        } catch (e: Exception) {
+            Log.e("BotService", "Error registering network callback: ${e.message}")
+        }
 
         // Register Phone Listener
         telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE)
@@ -201,6 +279,16 @@ class BotService : Service() {
         serviceScope.launch {
             userPreferences.isBotPollingEnabled.collect { isBotPollingEnabled = it }
         }
+
+        // New Observers
+        serviceScope.launch { userPreferences.isNotifyPowerConnected.collect { isNotifyPowerConnected = it } }
+        serviceScope.launch { userPreferences.isNotifyPowerDisconnected.collect { isNotifyPowerDisconnected = it } }
+        serviceScope.launch { userPreferences.isNotifyAirplaneModeOn.collect { isNotifyAirplaneModeOn = it } }
+        serviceScope.launch { userPreferences.isNotifyAirplaneModeOff.collect { isNotifyAirplaneModeOff = it } }
+        serviceScope.launch { userPreferences.isNotifyWifiConnected.collect { isNotifyWifiConnected = it } }
+        serviceScope.launch { userPreferences.isNotifyWifiDisconnected.collect { isNotifyWifiDisconnected = it } }
+        serviceScope.launch { userPreferences.isNotifyBluetoothConnected.collect { isNotifyBluetoothConnected = it } }
+        serviceScope.launch { userPreferences.isNotifyBluetoothDisconnected.collect { isNotifyBluetoothDisconnected = it } }
     }
 
     private fun handleBatteryLevel(pct: Float) {
@@ -562,9 +650,14 @@ class BotService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         try {
-            unregisterReceiver(batteryReceiver)
+            unregisterReceiver(systemEventReceiver)
         } catch (e: Exception) {
-            Log.e("BotService", "Error unregistering battery receiver: ${e.message}")
+            Log.e("BotService", "Error unregistering receiver: ${e.message}")
+        }
+        try {
+             connectivityManager.unregisterNetworkCallback(networkCallback)
+        } catch (e: Exception) {
+             Log.e("BotService", "Error unregistering network callback: ${e.message}")
         }
         try {
             telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE)
